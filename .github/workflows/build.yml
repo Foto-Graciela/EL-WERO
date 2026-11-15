@@ -1,0 +1,37 @@
+name: Compilar APK
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: Compilar
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
+        run: gradle assembleRelease --no-daemon
+      - name: Renombrar
+        run: cp android/app/build/outputs/apk/release/app-release.apk EL-WERO.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: EL-WERO-apk, path: EL-WERO.apk }
+      - name: Publicar release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: EL-WERO.apk
+          name: El Wero ${{ github.ref_name }}
+          body: |
+            El Wero · Juego de Cartas para Android.
+            Descarga EL-WERO.apk en tu teléfono e instálala.

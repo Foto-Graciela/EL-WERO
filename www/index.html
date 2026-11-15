@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1830">
+<title>El Wero · Juego de Cartas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="home" class="screen bg-arena"></div>
+<div id="starter" class="screen bg-arena"></div>
+<div id="coll" class="screen bg-arena"></div>
+<div id="decks" class="screen bg-arena"></div>
+<div id="deckedit" class="screen bg-arena"></div>
+<div id="packs" class="screen bg-arena"></div>
+<div id="lobby" class="screen bg-arena"></div>
+<div id="rules" class="screen bg-arena"></div>
+<div id="settings" class="screen bg-arena"></div>
+<div id="game" class="screen">
+  <div class="board">
+    <div class="pinfo" id="oinfo"></div>
+    <div class="ohand" id="ohand"></div>
+    <div class="field">
+      <div class="rowz" id="osz"></div>
+      <div class="rowz" id="omz"></div>
+      <div class="mid" id="mid"></div>
+      <div class="rowz" id="mmz"></div>
+      <div class="rowz" id="msz"></div>
+    </div>
+    <div class="pinfo" id="minfo"></div>
+    <div class="hand" id="mhand"></div>
+    <div class="helpbar" id="help"></div>
+  </div>
+</div>
+<div id="arena"></div>
+<canvas id="fxc"></canvas>
+<script src="cards.js"></script>
+<script src="engine.js"></script>
+<script src="ai.js"></script>
+<script src="fx.js"></script>
+<script src="ui.js"></script>
+<script src="game.js"></script>
+<script src="peerjs.min.js"></script>
+<script src="net.js"></script>
+</body>
+</html>
