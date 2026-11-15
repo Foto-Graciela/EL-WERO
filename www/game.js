@@ -10,11 +10,11 @@
 
   // ---------- inicio ----------
   function startCPU(cfg) {
-    G.cfg = cfg; G.mode = 'cpu'; G.level = cfg.level; G.me = 0;
+    G.cfg = cfg; G.mode = 'cpu'; G.level = cfg.level; G.me = 0; G.avatar = cfg.avatar || 'pc_gamer';
     AI.reset();
     begin(E.create({ seed: (Math.random() * 1e9) | 0, first: Math.random() < .5 ? 0 : 1, players: [{ name: cfg.me, deck: cfg.deck }, { name: cfg.cpuName, deck: cfg.cpuDeck }] }));
   }
-  function startNet(st, me) { G.mode = me === 0 ? 'host' : 'guest'; G.me = me; begin(st); }
+  function startNet(st, me) { G.avatar = 'caballero'; G.mode = me === 0 ? 'host' : 'guest'; G.me = me; begin(st); }
   function begin(st) {
     G.st = st; G.over = false; G.wait = false; G.sel = null; G.queue = [];
     document.querySelectorAll('.sheet,.modal').forEach(function (x) { x.remove(); });
@@ -104,9 +104,13 @@
     return idx.map(function (i) { return slotHTML(st, p, z, i); }).join('');
   }
   function info(st, p) {
-    var P = st.p[p], pct = Math.max(0, Math.min(100, P.lp / 80));
-    return '<div class="nm">' + (st.cur === p ? '▶ ' : '') + UI.esc(P.name) + '</div><div class="lpbox" data-lp="' + p + '"><div class="lpbar ' + (P.lp <= 2000 ? 'low' : '') + '" style="width:' + pct + '%"></div><div class="lptxt">LP ' + P.lp + '</div></div>' +
-      '<div class="pile" data-deck="' + p + '"><b>' + P.deck.length + '</b>mazo</div><div class="pile" data-gy="' + p + '"><b>' + P.gy.length + '</b>cement.</div>';
+    var P = st.p[p], pct = Math.max(0, Math.min(100, P.lp / 80)), mine = p === G.me;
+    var av = mine ? 'art/samurai.webp' : 'art/' + (G.avatar || 'pc_gamer') + '.webp';
+    return '<div class="avatar ' + (st.cur === p ? 'turn' : '') + '" style="background-image:url(' + av + ')"></div>' +
+      '<div class="plate"><div class="pname">' + UI.esc(P.name) + '</div><div class="lpbox" data-lp="' + p + '"><div class="lpbar ' + (P.lp <= 2000 ? 'low' : '') + '" style="width:' + pct + '%"></div></div></div>' +
+      '<div class="lpnum"><small>LP</small>' + P.lp + '</div>' +
+      '<div class="pile" data-deck="' + p + '"><i class="stack"></i><b>' + P.deck.length + '</b></div>' +
+      '<div class="pile gy" data-gy="' + p + '"><i class="tomb">🪦</i><b>' + P.gy.length + '</b></div>';
   }
   function render(st) {
     if (!st) return;
@@ -118,21 +122,23 @@
     $('#omz').innerHTML = row(st, o, 'mz');
     $('#mmz').innerHTML = row(st, me, 'mz');
     $('#msz').innerHTML = row(st, me, 'sz');
-    var hand = st.p[me].hand, n = hand.length, mg = n <= 5 ? -0.6 : -Math.min(7.5, 0.6 + (n - 5) * 1.4);
-    $('#mhand').innerHTML = hand.map(function (u) {
+    // mano en abanico
+    var hand = st.p[me].hand, n = hand.length, mg = n <= 5 ? -0.8 : -Math.min(7.8, 0.8 + (n - 5) * 1.4), step = Math.min(5, 26 / Math.max(1, n));
+    $('#mhand').innerHTML = hand.map(function (u, i) {
       var play = myTurn() && st.phase !== 'battle' && playable(st, u);
-      return UI.mini(st.c[u].id, { cls: play ? 'playable' : '', attr: 'data-u="' + u + '" style="margin:0 ' + mg + 'vw"' });
+      var k = i - (n - 1) / 2, rot = (k * step).toFixed(1), dy = (Math.abs(k) * Math.abs(k) * 1.6).toFixed(1);
+      return UI.mini(st.c[u].id, { cls: play ? 'playable' : '', attr: 'data-u="' + u + '" style="margin:0 ' + mg + 'vw;--r:' + rot + 'deg;--y:' + dy + 'px;z-index:' + (i + 1) + '"' });
     }).join('');
     var btn = '';
     if (myTurn() && !G.sel && !G.busy) {
-      if (st.phase === 'main1') btn = st.turn > 1 ? '<button class="btn small gold" data-act="phase">⚔️ Batalla</button>' : '<button class="btn small gold" data-act="end">Terminar ▶</button>';
-      else if (st.phase === 'battle') btn = '<button class="btn small gold" data-act="phase">Fin batalla ▶</button>';
-      else btn = '<button class="btn small gold" data-act="end">Terminar turno ▶</button>';
+      if (st.phase === 'main1') btn = st.turn > 1 ? '<button class="pbtn" data-act="phase">⚔ BATALLA</button>' : '<button class="pbtn" data-act="end">FIN TURNO ▸</button>';
+      else if (st.phase === 'battle') btn = '<button class="pbtn" data-act="phase">FIN BATALLA ▸</button>';
+      else btn = '<button class="pbtn" data-act="end">FIN TURNO ▸</button>';
     }
     var who = st.pending ? (st.pending.p === me ? '¡Responde!' : 'El rival decide…') : st.cur === me ? 'Tu turno' : (G.mode === 'cpu' ? 'La CPU piensa…' : 'Turno del rival');
-    $('#mid').innerHTML = '<button class="btn small" data-act="menu" style="padding:8px 11px">☰</button>' +
-      '<div><div class="phase">' + ['main1', 'battle', 'main2'].map(function (k) { return '<span class="' + (st.phase === k ? 'on' : '') + '">' + PH[k] + '</span>'; }).join('') + '</div>' +
-      '<div class="turnlbl">Turno ' + st.turn + ' · ' + who + '</div></div>' + (btn || '<span style="width:70px"></span>');
+    $('#mid').innerHTML = '<button class="menubtn" data-act="menu" aria-label="Menú">☰</button>' +
+      '<div class="midc"><div class="phase">' + ['main1', 'battle', 'main2'].map(function (k) { return '<span class="' + (st.phase === k ? 'on' : '') + '">' + PH[k] + '</span>'; }).join('') + '</div>' +
+      '<div class="turnlbl"><b>TURNO ' + st.turn + '</b> · ' + who + '</div></div>' + (btn || '<span class="pbtn ghost"></span>');
   }
   function playable(st, u) {
     var d = DB[st.c[u].id];
@@ -472,7 +478,7 @@
     var m = document.createElement('div'); m.className = 'modal';
     m.innerHTML = '<div class="endbox ' + (win ? '' : 'lose') + '"><h1>' + (win ? '¡GANASTE!' : 'PERDISTE') + '</h1><p>+ 🪙 ' + coins + ' monedas</p></div><div class="acts"><button class="btn gold" id="rem">🔁 Revancha</button><button class="btn" id="tomenu">🏠 Menú</button></div>';
     document.body.appendChild(m);
-    m.querySelector('#rem').onclick = function () { m.remove(); if (G.mode === 'cpu') { G.cfg.cpuDeck = UI.cpuDeck(G.level).cards; startCPU(G.cfg); } else Net.rematch(); };
+    m.querySelector('#rem').onclick = function () { m.remove(); if (G.mode === 'cpu') { var cd = UI.cpuDeck(G.level), W = window.WERO_DATA; G.cfg.cpuDeck = cd.cards; G.cfg.cpuName = 'CPU ' + W.arch[cd.arch].icon + ' ' + W.arch[cd.arch].name; G.cfg.avatar = (W.cards.filter(function (c) { return c.arch === cd.arch && c.rar === 'UL'; })[0] || {}).art; startCPU(G.cfg); } else Net.rematch(); };
     m.querySelector('#tomenu').onclick = function () { m.remove(); exitGame(); };
   }
   function exitGame() { G.over = true; G.st = null; document.querySelectorAll('.sheet,.modal').forEach(function (x) { x.remove(); }); if (G.mode !== 'cpu') Net.close(); UI.go('home'); }

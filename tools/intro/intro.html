@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>intro</title>
+<style>
+@font-face{font-family:Cinzel;font-weight:900;src:url(../../www/fonts/cinzel-latin-900-normal.woff2)}
+@font-face{font-family:Barlow;font-weight:700;src:url(../../www/fonts/barlow-condensed-latin-700-normal.woff2)}
+html,body{margin:0;width:720px;height:1280px;overflow:hidden;background:#000}
+#st{position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 50% 55%,#3b1f78 0%,#170b35 48%,#030108 100%)}
+#bgposter{position:absolute;inset:-40px;background:url(../../www/art/_portada.webp) center 40%/cover;filter:blur(12px) brightness(.22);opacity:.45}
+#floor{position:absolute;left:-40%;right:-40%;bottom:-6%;height:46%;background:repeating-linear-gradient(90deg,#ffd24a33 0 2px,#0000 2px 70px),repeating-linear-gradient(0deg,#ffd24a33 0 2px,#0000 2px 46px),linear-gradient(180deg,#2a1a52,#0c0620);transform:perspective(520px) rotateX(60deg);transform-origin:bottom}
+#speed{position:absolute;left:-60%;top:-60%;width:220%;height:220%;background:repeating-conic-gradient(from 0deg at 50% 50%,#fff0 0 3deg,#ffffff22 3deg 4deg)}
+canvas{position:absolute;inset:0}
+.f{position:absolute;width:400px}
+.f .img{width:400px;height:420px;border-radius:22px;border:5px solid #d9a441;background:#000 center 18%/cover;box-shadow:0 0 50px var(--c),0 20px 40px #000;overflow:hidden}
+.f .nm{margin-top:10px;text-align:center;font:900 34px Cinzel;color:#fff3d6;text-shadow:0 3px 0 #000}
+.f .pw{text-align:center;font:900 58px Cinzel;color:#ffe7a8;text-shadow:0 0 18px #ff9b2f,0 4px 0 #000;line-height:1}
+.f .pw small{font:700 26px Barlow;color:#cde;letter-spacing:2px}
+.vs{position:absolute;left:50%;top:50%;font:900 200px Cinzel;color:#ffd24a;text-shadow:0 0 40px #ff6a00,0 8px 0 #6a2a00;transform:translate(-50%,-50%)}
+.slash{position:absolute;left:50%;top:50%;width:1400px;height:26px;margin:-13px 0 0 -700px;background:linear-gradient(90deg,#fff0,#fff 40%,#ffe9a8 50%,#fff 60%,#fff0);box-shadow:0 0 40px #fff,0 0 80px #ffb12e;border-radius:50%}
+.piece{position:absolute;background-repeat:no-repeat;box-shadow:0 0 10px #ffb12e}
+#flash{position:absolute;inset:0;background:#fff;pointer-events:none}
+.tag{position:absolute;left:0;right:0;top:120px;text-align:center;font:900 60px Cinzel;color:#fff;letter-spacing:4px;text-shadow:0 0 24px #4af,0 5px 0 #000}
+.tag span{display:inline-block;padding:10px 40px;background:linear-gradient(90deg,#0000,#000c 18%,#000c 82%,#0000);border-top:2px solid #e2b25a99;border-bottom:2px solid #e2b25a99}
+.card{position:absolute;width:150px;height:210px;margin:-105px 0 0 -75px;border-radius:12px;border:3px solid #d9a441;background:#000 center 18%/cover;box-shadow:0 0 24px #ffb12e88,0 10px 20px #000}
+#cover{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,#24457e 0%,#10234a 45%,#050b18 100%)}
+#cover .art{position:absolute;left:0;right:0;top:60px;height:614px;background:url(../../www/art/_portada.webp) center top/100% 100%;transform-origin:50% 30%}
+#cover .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#050b18 0%,#0000 8%,#0000 70%,#050b18 100%)}
+#cover .shine{position:absolute;left:0;right:0;top:60px;height:300px;background:linear-gradient(105deg,transparent 40%,#ffffffaa 50%,transparent 60%);mix-blend-mode:overlay}
+#cover .bot{position:absolute;left:0;right:0;bottom:0;height:560px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(ellipse at 50% 25%,#2a1d6688,#0000 70%)}
+.start{font:900 64px Cinzel;letter-spacing:6px;padding:20px 70px;border-radius:80px;border:3px solid #fff8;background:linear-gradient(180deg,#fff2c4 0%,#ffd98a 30%,#d9a441 62%,#a8782c 100%);color:#3a2205;box-shadow:0 0 0 10px #e2b25a33,0 0 60px #ffb12e,0 10px 0 #6a3a07}
+.sub{font:700 26px Barlow;color:#cfdcf5;letter-spacing:6px}
+</style></head>
+<body><div id="st"><div id="bgposter"></div><div id="speed"></div><div id="floor"></div><canvas id="cv" width="720" height="1280"></canvas><div id="layer"></div><div id="flash"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const ART=a=>'../../www/art/'+a+'.webp';
+const FIGHTS=[
+ {t0:0.45,A:['samurai','EL WERO SAMURÁI',2500],B:['caballero','EL WERO CABALLERO',2100],side:1},
+ {t0:2.6,A:['boxeador','EL WERO BOXEADOR',2400],B:['pc_gamer','EL WERO PC GAMER',2000],side:-1},
+ {t0:4.75,A:['formula_1','EL WERO FÓRMULA 1',2800],B:['pirata','EL WERO PIRATA',2600],side:1},
+];
+const STORM=['astronauta','bombero','chef','tacos_cantimpalo','cantante','mago','motociclista','surfista','doctor','dj','vaquero','gym'];
+function R(n){let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const eo=x=>1-Math.pow(1-cl(x),3), ei=x=>Math.pow(cl(x),3), eb=x=>{x=cl(x);const c=1.70158;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const cx=$('#cv').getContext('2d');
+function sparks(x,y,since,n,seed,cols,spd){
+  if(since<0||since>1.2)return;
+  cx.globalCompositeOperation='lighter';
+  for(let i=0;i<n;i++){const a=R(seed+i)*Math.PI*2,v=(spd||900)*(.25+R(seed+i*3.1)),life=.5+R(seed+i*7.7)*.7;
+    if(since>life)continue;const k=since/life;
+    const px=x+Math.cos(a)*v*since, py=y+Math.sin(a)*v*since+500*since*since;
+    cx.globalAlpha=1-k;cx.fillStyle=cols[i%cols.length];cx.beginPath();cx.arc(px,py,(2+R(seed+i*5)*5)*(1-k*.5),0,7);cx.fill();}
+  cx.globalAlpha=1;cx.globalCompositeOperation='source-over';
+}
+function embers(t){cx.globalCompositeOperation='lighter';for(let i=0;i<70;i++){const sp=40+R(i)*90,x=(R(i*2)*720+Math.sin(t*1.3+i)*30+720)%720,y=1280-((R(i*3)*1280+t*sp)%1400);cx.globalAlpha=.25+R(i*4)*.5;cx.fillStyle=i%3?'#ff9b2f':'#ffd24a';cx.beginPath();cx.arc(x,y,1.5+R(i*5)*2.5,0,7);cx.fill();}cx.globalAlpha=1;cx.globalCompositeOperation='source-over';}
+function fighter(data,x,y,rot,sc,col,showPow,pow){
+  return `<div class="f" style="left:${x}px;top:${y}px;transform:rotate(${rot}deg) scale(${sc});--c:${col}">
+   <div class="img" style="background-image:url(${ART(data[0])})"></div><div class="nm">${data[1]}</div>
+   <div class="pw" style="opacity:${showPow}"><small>ATK </small>${pow}</div></div>`;
+}
+function shatter(data,x,y,since,seed){
+  if(since<0)return '';let h='';const N=5,W=400/N,H=420/N;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const s=seed+i*N+j,vx=(i-N/2+.5)*(220+R(s)*380),vy=(j-N/2+.5)*(220+R(s+1)*380)-200,
+    k=since,px=x+i*W+vx*k,py=y+j*H+vy*k+900*k*k,rot=(R(s+2)-.5)*900*k,op=cl(1-k*1.2);
+    h+=`<div class="piece" style="left:${px}px;top:${py}px;width:${W}px;height:${H}px;background-image:url(${ART(data[0])});background-size:400px 420px;background-position:${-i*W}px ${-j*H}px;transform:rotate(${rot}deg);opacity:${op}"></div>`;}
+  return h;
+}
+function render(t){
+  cx.clearRect(0,0,720,1280);let html='',flash=0,shake=[0,0],speed=0;
+  if(t<.45){flash=Math.max(flash,t>.12&&t<.2?.9:0,t>.3&&t<.36?.6:0);html+=`<div class="tag" style="top:560px;opacity:${cl(t/.2)};transform:scale(${1+t*.4})"><span>¡A DUELO!</span></div>`;}
+  embers(t);
+  for(const F of FIGHTS){const u=t-F.t0;if(u<0||u>2.2)continue;
+    const s=F.side, aX0=s>0?40:280, aY0=700, bX0=s>0?280:40, bY0=150;
+    const inA=eo(u/.35), inB=eo((u-.05)/.35);
+    let ax=aX0+(1-inA)*(-700*s), ay=aY0+(1-inA)*200, bx=bX0+(1-inB)*(700*s), by=bY0-(1-inB)*200;
+    let arot=(1-inA)*-20*s, brot=(1-inB)*20*s, asc=1;
+    if(u>.75&&u<=.88){const k=eo((u-.75)/.13);ax-=30*s*k;ay+=30*k;arot=-8*s*k;asc=1-.06*k;}
+    if(u>.88){const k=ei((u-.88)/.12),back=u>1.05?eo((u-1.05)/.3):0;const dx=(bX0-aX0)*.62,dy=(bY0-aY0)*.62;
+      ax=aX0-30*s+(dx+30*s)*k*(1-back);ay=aY0+30+(dy-30)*k*(1-back);arot=(-8+18*k)*s*(1-back);asc=1+.18*k*(1-back);speed=u<1.15?1:0;}
+    const imp=u-1.0, impX=(aX0+bX0)/2+200, impY=(aY0+bY0)/2+260;
+    if(imp>=0){flash=Math.max(flash,cl(1-imp/.22)*.95);if(imp<.3)shake=[Math.sin(imp*90)*22*(1-imp/.3),Math.cos(imp*70)*16*(1-imp/.3)];
+      if(imp<.35){const k=imp/.35;html+=`<div class="slash" style="opacity:${k<.4?k/.4:1-(k-.4)/.6};transform:rotate(${s>0?-30:30}deg) scaleX(${eo(k*1.5)})"></div>`;}
+      sparks(impX,impY,imp,140,F.t0*100,['#fff','#ffd24a','#ff8a2f','#ff4a4a'],1100);
+      if(imp<.25){bx+=40*s*Math.sin(imp/.25*Math.PI);by-=30*Math.sin(imp/.25*Math.PI);}}
+    const pw=u>.35?cl((u-.35)/.3):0;
+    const fadeOut=u>1.9?1-(u-1.9)/.3:1;
+    html+=`<div style="opacity:${fadeOut}">`;
+    if(imp<.06) html+=fighter(F.B,bx,by,brot,1,'#4ab0ff',pw,Math.round(F.B[2]*pw/10)*10);
+    else { html+=`<div class="f" style="left:${bx}px;top:${by}px"><div class="nm" style="margin-top:430px;color:#ff6a5a">¡DESTRUIDO!</div></div>`+shatter(F.B,bx,by,imp-.06,F.t0*50); }
+    html+=fighter(F.A,ax,ay,arot,asc,'#ff8a2f',pw,Math.round(F.A[2]*pw/10)*10);
+    if(u>.3&&u<.85){const k=(u-.3)/.55;html+=`<div class="vs" style="opacity:${k<.2?k/.2:k>.8?(1-k)/.2:1};transform:translate(-50%,-50%) scale(${k<.2?3-2*eb(k/.2):1}) rotate(${k<.2?-20*(1-k/.2):0}deg)">VS</div>`;}
+    html+='</div>';
+    if(imp>.15&&imp<1){const k=(imp-.15)/.85;html+=`<div class="tag" style="top:590px;font-size:44px;white-space:nowrap;opacity:${k<.15?k/.15:k>.8?(1-k)/.2:1}"><span>¡${F.A[1].replace('EL WERO ','')} GANA!</span></div>`;}
+  }
+  const v=t-6.85;
+  if(v>=0&&t<8.05){speed=Math.max(speed,.6);for(let i=0;i<STORM.length;i++){const a=i/STORM.length*Math.PI*2+v*4.2,r=470*(1-ei(v/1.2))+60,k=eo(v/.4);
+      const x=360+Math.cos(a)*r*k, y=640+Math.sin(a)*r*.9*k, rot=a*57+90;
+      html+=`<div class="card" style="left:${x}px;top:${y}px;transform:rotate(${rot}deg) scale(${.6+.6*k});background-image:url(${ART(STORM[i])});opacity:${cl(1-ei((v-1)/.2))}"></div>`;}
+    sparks(360,640,v-.9,120,999,['#fff','#ffd24a','#c86bff','#4dd2ff'],1300);
+    if(v>.95)flash=Math.max(flash,cl((v-.95)/.25));}
+  const c=t-8.0;
+  if(c>=0){const z=1.14-.14*eo(c/2),sh=cl((c-.35)/.9),pul=1+.06*Math.sin(c*7);
+    cx.clearRect(0,0,720,1280);
+    html+=`<div id="cover"><div class="art" style="transform:scale(${z})"></div><div class="shine" style="background-position:${(1-sh)*900-300}px 0;background-size:900px 100%;opacity:${sh>0&&sh<1?1:0}"></div>
+     <div class="bot"><div class="start" style="transform:scale(${eb(cl(c/.5))*pul});opacity:${cl(c/.3)}">▶ START</div><div class="sub" style="opacity:${cl((c-.4)/.4)}">TOCA PARA EMPEZAR</div></div></div>`;
+    flash=Math.max(flash,cl(1-c/.35));}
+  $('#layer').innerHTML=html;
+  $('#flash').style.opacity=flash;
+  $('#speed').style.opacity=speed;$('#speed').style.transform=`rotate(${t*40}deg)`;
+  $('#st').style.transform=`translate(${shake[0]}px,${shake[1]}px)`;
+}
+window.render=render;
+</script></body></html>

@@ -40,7 +40,7 @@
     if (d.kind === 'monster') {
       var a = o.atk != null ? o.atk : d.atk, df = o.def != null ? o.def : d.df;
       var ca = a > d.atk ? 'up' : a < d.atk ? 'dn' : '', cd = df > d.df ? 'up' : df < d.df ? 'dn' : '';
-      st = '<div class="st"><span class="' + ca + '">' + a + '</span><small>DEF <span class="' + cd + '">' + df + '</span></small></div>';
+      st = '<div class="st"><span class="a ' + ca + '">' + a + '</span><small>DEF <span class="' + cd + '">' + df + '</span></small></div>';
     } else st = '<div class="st ty">' + (d.kind === 'spell' ? 'MAGIA' : 'TRAMPA') + '</div>';
     return '<div class="card k-' + d.kind + ' r-' + d.rar + ' ' + (o.cls || '') + '" data-id="' + id + '" ' + (o.attr || '') + '>' +
       '<div class="nm">' + esc(d.name.replace('El Wero ', '')) + '</div>' +
@@ -92,16 +92,32 @@
   var RENDER = {};
   RENDER.home = function () {
     if (!S.starter) return go('starter');
-    var bg = ['samurai', 'pc_gamer', 'tacos_cantimpalo', 'astronauta', 'formula_1', 'cantante', 'bombero', 'ingeniero'];
-    $('#home').innerHTML = '<div class="home-weros">' + bg.map(function (a, i) { return '<img src="art/' + a + '.webp" style="left:' + ((i % 4) * 25 + (i > 3 ? 8 : -4)) + '%;top:' + (i > 3 ? 70 : 2) + '%;animation-delay:-' + i + 's">'; }).join('') + '</div>' +
-      '<div class="logo"><div class="suits">♠ ♥ ♦ ♣</div><div class="t1">EL WERO</div><div class="t2">JUEGO DE CARTAS</div></div>' +
-      '<div class="menu"><div style="text-align:center;margin-bottom:6px"><span class="coins">🪙 ' + S.coins + '</span> &nbsp; <span class="coins">🏆 ' + S.stats.w + ' · 💀 ' + S.stats.l + '</span></div>' +
-      '<button class="btn gold" onclick="UI.cpuMenu()">⚔️ Jugar contra la CPU</button>' +
-      '<button class="btn" onclick="UI.go(\'lobby\')">🌐 Multijugador en línea</button>' +
-      '<button class="btn" onclick="UI.go(\'decks\')">🃏 Mis decks</button>' +
-      '<button class="btn" onclick="UI.go(\'coll\')">📚 Colección (' + (S.opt.free ? 600 : ownedUnique()) + '/600)</button>' +
-      '<button class="btn" onclick="UI.go(\'packs\')">🎁 Sobres</button>' +
-      '<div style="display:flex;gap:8px"><button class="btn" onclick="UI.go(\'rules\')">📖 Cómo jugar</button><button class="btn" onclick="UI.go(\'settings\')">⚙️ Ajustes</button></div></div>';
+    var nd = S.decks.length;
+    $('#home').innerHTML = '<div class="home-bg"></div>' +
+      '<div class="home-top"><div class="pcard"><div class="avatar" style="background-image:url(art/samurai.webp)"></div><div><b>' + esc(S.name || 'Wero') + '</b><small>🏆 ' + S.stats.w + ' victorias · 💀 ' + S.stats.l + '</small></div></div><div class="coins">🪙 ' + S.coins + '</div></div>' +
+      '<img class="home-logo" src="art/_logo.webp" alt="El Wero · Juego de Cartas">' +
+      '<div class="menu">' +
+      '<button class="hero" onclick="UI.cpuMenu()"><span class="ic">⚔</span><span class="tx"><b>JUGAR</b><small>Duelo contra la CPU</small></span><span class="arr">›</span></button>' +
+      '<div class="tiles">' +
+      '<button class="tile" onclick="UI.go(\'lobby\')"><span class="ic">🌐</span><b>Multijugador</b><small>En línea con código</small></button>' +
+      '<button class="tile" onclick="UI.go(\'decks\')"><span class="ic">🃏</span><b>Mis decks</b><small>' + nd + ' deck' + (nd === 1 ? '' : 's') + '</small></button>' +
+      '<button class="tile" onclick="UI.go(\'coll\')"><span class="ic">📚</span><b>Colección</b><small>' + (S.opt.free ? 600 : ownedUnique()) + ' / 600 cartas</small></button>' +
+      '<button class="tile" onclick="UI.go(\'packs\')"><span class="ic">🎁</span><b>Sobres</b><small>Desde 🪙 100</small></button>' +
+      '</div><div class="minirow"><button onclick="UI.go(\'rules\')">📖 Cómo jugar</button><button onclick="UI.go(\'settings\')">⚙ Ajustes</button></div></div>';
+  };
+  // intro en video y portada con START
+  RENDER.intro = function () {
+    var v = $('#introvid'), done = false;
+    var finish = function () { if (done) return; done = true; try { v.pause(); } catch (e) { } go('cover'); };
+    v.onended = finish; v.onerror = finish;
+    $('#skipintro').onclick = finish;
+    v.currentTime = 0; v.muted = !S.opt.sound;
+    var pr = v.play();
+    if (pr && pr.catch) pr.catch(function () { v.muted = true; v.play().catch(finish); });
+    setTimeout(finish, 14000);
+  };
+  RENDER.cover = function () {
+    $('#startbtn').onclick = function () { FX.unlock(); FX.sfx.epic(); FX.flash(); setTimeout(function () { go('home'); }, 250); };
   };
   RENDER.starter = function () {
     var h = '<div class="topbar"><h2>Elige tu deck inicial</h2></div><div class="scroll"><p class="muted" style="padding:0 16px">Empiezas con uno de estos 3 decks de 40 cartas. Después consigues más Weros abriendo sobres.</p>';
@@ -347,7 +363,7 @@
     m.onclick = function (e) {
       var b = e.target.closest('[data-l]'); if (!b) return; m.remove(); if (b.dataset.l === 'x') return;
       var lv = +b.dataset.l, cd = cpuDeck(lv);
-      Game.startCPU({ me: S.name || 'Tú', deck: d.cards, cpuName: 'CPU ' + W.arch[cd.arch].icon + ' ' + W.arch[cd.arch].name, cpuDeck: cd.cards, level: lv });
+      Game.startCPU({ me: S.name || 'Tú', deck: d.cards, cpuName: 'CPU ' + W.arch[cd.arch].icon + ' ' + W.arch[cd.arch].name, cpuDeck: cd.cards, level: lv, avatar: (W.cards.filter(function (c) { return c.arch === cd.arch && c.rar === 'UL'; })[0] || {}).art });
     };
   }
   function reward(win, mode, level) {
@@ -379,6 +395,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     load();
     document.body.addEventListener('pointerdown', function () { FX.unlock(); }, { once: true });
-    go('home');
+    var seen = false; try { seen = !!sessionStorage.getItem('elwero_intro'); sessionStorage.setItem('elwero_intro', '1'); } catch (e) { }
+    go(seen ? 'home' : 'intro');
   });
 })();
