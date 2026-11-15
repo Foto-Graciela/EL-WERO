@@ -207,11 +207,13 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: EL-WERO-apk, path: EL-WERO.apk }
       - name: Publicar release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || contains(github.event.head_commit.message, '[release]')
         uses: softprops/action-gh-release@v2
         with:
           files: EL-WERO.apk
-          name: El Wero ${{ github.ref_name }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.0.{0}', github.run_number) }}
+          target_commitish: ${{ github.sha }}
+          name: El Wero ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.0.{0}', github.run_number) }}
           body: |
             El Wero · Juego de Cartas para Android.
             Descarga EL-WERO.apk en tu teléfono e instálala.
