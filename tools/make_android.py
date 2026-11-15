@@ -31,7 +31,7 @@ android {{
         applicationId '{PKG}'
         minSdk 24
         targetSdk 34
-        versionCode (System.getenv('VERSION_CODE') ?: '1') as int
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
         versionName System.getenv('VERSION_NAME') ?: '1.0.0'
     }}
     signingConfigs {{
